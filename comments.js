@@ -1,22 +1,40 @@
 //create web server 
-const http = require('http');
+const express = require('express');
+const app = express();
+const path = require('path');
+const bodyParser = require('body-parser');
 const fs = require('fs');
-const url = require('url');
-const port = 3000;
-const server = http.createServer((req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    const q = url.parse(req.url, true);
-    const filename = "." + q.pathname;
-    fs.readFile(filename, (err, data) => {
+const commentsPath = path.join(__dirname, 'data/comments.json');
+
+app.use(express.static('public'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
+
+app.get('/comments', (req, res) => {
+    fs.readFile(commentsPath, (err, data) => {
         if (err) {
-            res.writeHead(404, { 'Content-Type': 'text/html' });
-            return res.end("404 Not Found");
+            return res.status(500).send('Error loading comments');
         }
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.write(data);
-        return res.end();
+        res.send(JSON.parse(data));
     });
 });
-server.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
+
+app.post('/comments', (req, res) => {
+    fs.readFile(commentsPath, (err, data) => {
+        if (err) {
+            return res.status(500).send('Error loading comments');
+        }
+        const comments = JSON.parse(data);
+        comments.push(req.body);
+        fs.writeFile(commentsPath, JSON.stringify(comments), (err) => {
+            if (err) {
+                return res.status(500).send('Error saving comments');
+            }
+            res.send('Comment saved');
+        });
+    });
+});
+
+app.listen(3000, () => {
+    console.log('Server is listening on port 3000');
 });
