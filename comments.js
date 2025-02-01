@@ -1,32 +1,22 @@
 //create web server 
-var http = require('http');
-var url = require('url');
-var fs = require('fs');
-
-//create server
-http.createServer(function (req, res) {
-    //parse the request containing file name
-    var pathname = url.parse(req.url).pathname;
-    //print the name of the file for which request is made
-    console.log("Request for " + pathname + " received.");
-    //read the requested file content from file system
-    fs.readFile(pathname.substr(1), function (err, data) {
+const http = require('http');
+const fs = require('fs');
+const url = require('url');
+const port = 3000;
+const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    const q = url.parse(req.url, true);
+    const filename = "." + q.pathname;
+    fs.readFile(filename, (err, data) => {
         if (err) {
-            console.log(err);
-            //http status: 404 not found
-            //content type: text/html
             res.writeHead(404, { 'Content-Type': 'text/html' });
-        } else {
-            //page found
-            //http status: 200 ok
-            //content type: text/html
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-            //write the content of the file to response body
-            res.write(data.toString());
+            return res.end("404 Not Found");
         }
-        //send the response body
-        res.end();
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.write(data);
+        return res.end();
     });
-}).listen(8081);
-
-console.log("Server running at http://
+});
+server.listen(port, () => {
+    console.log(`Server is running at http://localhost:${port}`);
+});
